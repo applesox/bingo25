@@ -290,6 +290,47 @@
             line-height: 1.4;
         }
 
+        .event-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .event-modal-content {
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #4CAF50;
+            border-radius: 12px;
+            padding: 1.5rem;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            color: white;
+        }
+
+        .event-modal-content h3 {
+            color: #4CAF50;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        #event-full-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            background: #1a1a1a;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #333;
+            margin-bottom: 1rem;
+        }
+
         /* Mobile adjustments */
         @media (max-width: 600px) {
             body {
@@ -351,6 +392,19 @@
             .controls div:first-child {
                 font-size: 0.8rem;
                 margin-bottom: 0.6rem;
+                line-height: 1.3;
+            }
+            
+            .event-modal-content {
+                padding: 1rem;
+            }
+            
+            .event-modal-content h3 {
+                font-size: 1rem;
+            }
+            
+            #event-full-text {
+                font-size: 1rem;
             }
             
             .control-btn {
@@ -413,7 +467,30 @@
             </div>
         </div>
 
+        <!-- Event Details Modal -->
+        <div id="event-modal" class="event-modal" style="display: none;">
+            <div class="event-modal-content">
+                <h3>📋 Baseball Event</h3>
+                <div id="event-full-text"></div>
+                <div style="margin-top: 1rem;">
+                    <button class="control-btn" onclick="markEventFromModal()" id="mark-event-btn">✅ Mark This Event</button>
+                    <button class="control-btn" onclick="hideEventModal()" style="margin-left: 0.5rem;">❌ Close</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Verification Screen -->
+        <div id="verification-screen" class="verification-screen" style="display: none;">
+            <div class="verification-content">
+                <h2>🏆 WINNER VERIFICATION</h2>
+                <div style="background: #4CAF50; color: white; padding: 0.5rem; border-radius: 6px; margin-bottom: 1rem; font-weight: bold;">
+                    📱 SHOW THIS SCREEN TO OFFICIALS
+                </div>
+                <div id="verification-details"></div>
+                <div class="verification-grid" id="verification-grid"></div>
+                <button class="control-btn" onclick="hideVerification()">❌ Close</button>
+            </div>
+        </div>
         <div id="verification-screen" class="verification-screen" style="display: none;">
             <div class="verification-content">
                 <h2>🏆 WINNER VERIFICATION</h2>
@@ -436,7 +513,8 @@
         <!-- Controls -->
         <div class="controls">
             <div style="text-align: center; margin-bottom: 0.8rem; font-size: 0.8rem; color: #ccc;">
-                📢 When someone yells "BINGO!", everyone hit 🔄 New Card
+                📢 When BINGO winner is announced, everyone hit 🔄 New Card<br>
+                💡 Double-tap any square to see full event text
             </div>
             <div class="control-grid">
                 <button class="control-btn" onclick="newCard()">🔄 New Card</button>
@@ -469,6 +547,7 @@
         let roundStartTime = new Date();
         let timerInterval;
         let pausedElapsed = 0;
+        let currentEventIndex = -1;
 
         function shuffleArray(array) {
             const newArray = [...array];
@@ -560,7 +639,23 @@
                     const displayText = bingoCard[i].length > 12 ? bingoCard[i].substring(0, 9) + "..." : bingoCard[i];
                     button.textContent = displayText;
                     button.title = bingoCard[i];
-                    button.onclick = () => toggleSquare(i);
+                    
+                    // Single tap to toggle, double tap to show full text
+                    let tapCount = 0;
+                    button.onclick = (e) => {
+                        tapCount++;
+                        if (tapCount === 1) {
+                            setTimeout(() => {
+                                if (tapCount === 1) {
+                                    toggleSquare(i);
+                                } else if (tapCount === 2) {
+                                    showEventModal(i);
+                                }
+                                tapCount = 0;
+                            }, 300);
+                        }
+                    };
+                    
                     button.disabled = gameWon;
                 }
 
@@ -710,6 +805,37 @@
 
         function hideVerification() {
             document.getElementById('verification-screen').style.display = 'none';
+        }
+
+        function showEventModal(index) {
+            currentEventIndex = index;
+            const modal = document.getElementById('event-modal');
+            const fullText = document.getElementById('event-full-text');
+            const markBtn = document.getElementById('mark-event-btn');
+            
+            fullText.textContent = bingoCard[index];
+            
+            if (selectedSquares[index]) {
+                markBtn.innerHTML = '❌ Unmark This Event';
+                markBtn.style.background = '#f44336';
+            } else {
+                markBtn.innerHTML = '✅ Mark This Event';
+                markBtn.style.background = '#4CAF50';
+            }
+            
+            modal.style.display = 'flex';
+        }
+
+        function hideEventModal() {
+            document.getElementById('event-modal').style.display = 'none';
+            currentEventIndex = -1;
+        }
+
+        function markEventFromModal() {
+            if (currentEventIndex >= 0) {
+                toggleSquare(currentEventIndex);
+                hideEventModal();
+            }
         }
 
         function startNewRound() {
