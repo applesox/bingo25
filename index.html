@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, minimum-scale=0.25, user-scalable=1">
+    <title>AppleSox Baseball Bingo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            touch-action: manipulation;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0e2a0e, #1a4a1a);
+            color: white;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .title {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .round-info {
+            font-size: 1rem;
+            color: #4CAF50;
+            margin-top: 0.3rem;
+            font-weight: 600;
+        }
+
+        .bingo-grid {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 4px;
+        }
+
+        .grid-square {
+            position: relative;
+        }
+
+        .indicator-bar {
+            height: 4px;
+            border-radius: 2px;
+            margin-bottom: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .square-button {
+            width: 100%;
+            height: 60px;
+            font-size: 11px;
+            font-weight: 600;
+            border: 2px solid #ffffff;
+            border-radius: 6px;
+            background-color: #1a1a1a;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0.3rem;
+            line-height: 1.1;
+            overflow: hidden;
+        }
+
+        .square-button:hover {
+            transform: scale(1.02);
+            border-color: #4CAF50;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+        }
+
+        .square-button:active {
+            transform: scale(0.98);
+        }
+
+        .square-button.selected {
+            background-color: #2d5016;
+            border-color: #4CAF50;
+        }
+
+        .free-space {
+            background: linear-gradient(45deg, #FFD700, #FFA500) !important;
+            color: #000000 !important;
+            border-color: #FFD700 !important;
+            cursor: default;
+            font-weight: bold;
+        }
+
+        .free-space:hover {
+            transform: none;
+            border-color: #FFD700;
+        }
+
+        .controls {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .control-btn {
+            height: 45px;
+            font-size: 15px;
+            font-weight: 600;
+            border: 2px solid #ffffff;
+            border-radius: 8px;
+            background-color: #1a1a1a;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .control-btn:hover {
+            background-color: #333;
+            transform: translateY(-1px);
+        }
+
+        .control-btn.quit {
+            background-color: #f44336;
+            border-color: #f44336;
+        }
+
+        .control-btn.quit:hover {
+            background-color: #d32f2f;
+        }
+
+        .success-message {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin: 1rem 0;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        .verification-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .verification-content {
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #4CAF50;
+            border-radius: 12px;
+            padding: 1.5rem;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            color: white;
+        }
+
+        .verification-content h2 {
+            color: #4CAF50;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .verification-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 2px;
+            margin: 1rem 0;
+            background: #333;
+            padding: 0.5rem;
+            border-radius: 8px;
+        }
+
+        .verification-square {
+            background: #1a1a1a;
+            color: white;
+            padding: 0.3rem;
+            font-size: 8px;
+            text-align: center;
+            border-radius: 4px;
+            min-height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .verification-square.marked {
+            background: #2d5016;
+            border: 1px solid #4CAF50;
+        }
+
+        .verification-square.winning-line {
+            background: #FFD700 !important;
+            color: #000 !important;
+            font-weight: bold;
+        }
+
+        #verification-details {
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        .new-round-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .new-round-content {
+            background: linear-gradient(135deg, #FF6B35, #F7931E);
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .new-round-content h2 {
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .new-round-content p {
+            margin-bottom: 0.8rem;
+            font-size: 1rem;
+            line-height: 1.4;
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 600px) {
+            body {
+                padding: 0.5rem;
+            }
+            
+            .header {
+                padding: 0.6rem;
+            }
+            
+            .square-button {
+                height: 55px;
+                font-size: 10px;
+                font-weight: 700;
+            }
+            
+            .title {
+                font-size: 1.2rem;
+            }
+            
+            .round-info {
+                font-size: 1rem;
+            }
+            
+            .verification-content {
+                padding: 1rem;
+            }
+            
+            .verification-content h2 {
+                font-size: 1.2rem;
+            }
+            
+            #verification-details {
+                font-size: 0.9rem;
+            }
+            
+            .verification-square {
+                font-size: 9px;
+                min-height: 32px;
+                font-weight: 600;
+            }
+            
+            .new-round-content {
+                padding: 1.5rem;
+            }
+            
+            .new-round-content h2 {
+                font-size: 1.5rem;
+            }
+            
+            .new-round-content p {
+                font-size: 1rem;
+            }
+            
+            .controls {
+                padding: 0.8rem;
+            }
+            
+            .controls div:first-child {
+                font-size: 0.8rem;
+                margin-bottom: 0.6rem;
+            }
+            
+            .control-btn {
+                font-size: 15px;
+                font-weight: 600;
+            }
+            
+            .success-message {
+                font-size: 1.3rem;
+            }
+        }
+
+        /* Tablet and up */
+        @media (min-width: 768px) {
+            .container {
+                max-width: 800px;
+            }
+            
+            .square-button {
+                height: 70px;
+                font-size: 12px;
+            }
+            
+            .control-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="title">🍎⚾ AppleSox Baseball Bingo</div>
+            <div class="round-info">Round <span id="round-number">1</span> • <span id="round-timer">0:00</span></div>
+        </div>
+
+        <!-- Success Message -->
+        <div id="success-message" class="success-message" style="display: none;">
+            🎉 BINGO! 🎉<br>
+            <span id="completed-lines"></span><br>
+            <div style="margin-top: 0.5rem; font-size: 0.9rem; color: #FFD700;">
+                📢 <strong>ANNOUNCE TO GROUP:</strong><br>
+                "BINGO! Round <span id="winner-round">1</span> is over!"
+            </div>
+            <button class="control-btn" onclick="showVerification()" style="margin-top: 0.5rem; padding: 0.5rem 1rem; font-size: 12px;">📋 Show Verification</button>
+            <button class="control-btn" onclick="startNewRound()" style="margin-top: 0.5rem; margin-left: 0.5rem; padding: 0.5rem 1rem; font-size: 12px; background: #FF6B35;">🚀 Start New Round</button>
+        </div>
+
+        <!-- New Round Screen -->
+        <div id="new-round-screen" class="new-round-screen" style="display: none;">
+            <div class="new-round-content">
+                <h2>🔄 NEW ROUND STARTING!</h2>
+                <div id="new-round-details">
+                    <p><strong>📢 TELL EVERYONE:</strong></p>
+                    <p><strong>Round <span id="new-round-number">2</span> begins now!</strong></p>
+                    <p>"Everyone hit New Card to get fresh events!"</p>
+                </div>
+                <button class="control-btn" onclick="hideNewRoundScreen()" style="background: #4CAF50; font-size: 16px; padding: 1rem 2rem;">▶️ START PLAYING</button>
+            </div>
+        </div>
+
+        <!-- Verification Screen -->
+        <div id="verification-screen" class="verification-screen" style="display: none;">
+            <div class="verification-content">
+                <h2>🏆 WINNER VERIFICATION</h2>
+                <div style="background: #4CAF50; color: white; padding: 0.5rem; border-radius: 6px; margin-bottom: 1rem; font-weight: bold;">
+                    📱 SHOW THIS SCREEN TO OFFICIALS
+                </div>
+                <div id="verification-details"></div>
+                <div class="verification-grid" id="verification-grid"></div>
+                <button class="control-btn" onclick="hideVerification()">❌ Close</button>
+            </div>
+        </div>
+
+        <!-- Bingo Grid -->
+        <div class="bingo-grid">
+            <div class="grid" id="bingo-grid">
+                <!-- Grid squares will be generated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <div style="text-align: center; margin-bottom: 0.8rem; font-size: 0.8rem; color: #ccc;">
+                📢 When someone yells "BINGO!", everyone hit 🔄 New Card
+            </div>
+            <div class="control-grid">
+                <button class="control-btn" onclick="newCard()">🔄 New Card</button>
+                <button class="control-btn" onclick="clearSelections()">🗑️ Clear</button>
+                <button class="control-btn" onclick="shuffleEvents()">🎲 Shuffle</button>
+                <button class="control-btn quit" onclick="quitGame()">🚪 Quit</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const GRID_SIZE = 5;
+        const EVENT_POOL = [
+            "Strikeout Looking", "Double Play", "Home Run", "Walk", "Stolen Base",
+            "Hit By Pitch", "Ground Rule Double", "Pitching Change", "Wild Pitch",
+            "Passed Ball", "Pickoff", "Sac Fly", "Balk", "Foul Ball Catch",
+            "Ejection", "Triple", "2-Out RBI", "Lead-off Hit", "Intentional Walk",
+            "Error by SS", "Lefty Pitcher", "Caught Stealing", "First Pitch Swing",
+            "5+ Pitch AB", "Bunt Attempt", "Infield Fly Rule", "Squeeze Play",
+            "Pinch Hitter", "Pitcher at Bat", "Diving Catch", "Bench Clearing",
+            "Rain Delay", "Fan Interference", "Umpire Review", "Grand Slam"
+        ];
+
+        let bingoCard = [];
+        let selectedSquares = [];
+        let gameWon = false;
+        let winningLines = [];
+        let gameStartTime = new Date();
+        let currentRound = 1;
+        let roundStartTime = new Date();
+        let timerInterval;
+        let pausedElapsed = 0;
+
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function updateTimer() {
+            const now = new Date();
+            const elapsed = Math.floor((now - roundStartTime) / 1000) + pausedElapsed;
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            const timerElement = document.getElementById('round-timer');
+            if (timerElement) {
+                timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            roundStartTime = new Date();
+            pausedElapsed = 0;
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function resumeTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            roundStartTime = new Date(); // Adjust start time to account for paused time
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                const now = new Date();
+                pausedElapsed += Math.floor((now - roundStartTime) / 1000);
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function initializeGame() {
+            bingoCard = shuffleArray(EVENT_POOL).slice(0, GRID_SIZE * GRID_SIZE);
+            const centerIndex = Math.floor((GRID_SIZE * GRID_SIZE) / 2);
+            bingoCard[centerIndex] = "FREE SPACE";
+            
+            selectedSquares = new Array(GRID_SIZE * GRID_SIZE).fill(false);
+            selectedSquares[centerIndex] = true; // Free space is always selected
+            
+            gameWon = false;
+            winningLines = [];
+            renderGrid();
+            hideSuccessMessage();
+            updateRoundDisplay();
+            startTimer();
+        }
+
+        function updateRoundDisplay() {
+            const roundElement = document.getElementById('round-number');
+            if (roundElement) {
+                roundElement.textContent = currentRound;
+            }
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('bingo-grid');
+            grid.innerHTML = '';
+
+            for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+                const square = document.createElement('div');
+                square.className = 'grid-square';
+
+                const indicator = document.createElement('div');
+                indicator.className = 'indicator-bar';
+                indicator.style.backgroundColor = selectedSquares[i] ? '#4CAF50' : '#f44336';
+
+                const button = document.createElement('button');
+                button.className = 'square-button';
+                if (selectedSquares[i]) button.classList.add('selected');
+                
+                const isFreeSpace = bingoCard[i] === "FREE SPACE";
+                if (isFreeSpace) {
+                    button.classList.add('free-space');
+                    button.textContent = "FREE";
+                    button.disabled = true;
+                } else {
+                    const displayText = bingoCard[i].length > 12 ? bingoCard[i].substring(0, 9) + "..." : bingoCard[i];
+                    button.textContent = displayText;
+                    button.title = bingoCard[i];
+                    button.onclick = () => toggleSquare(i);
+                    button.disabled = gameWon;
+                }
+
+                square.appendChild(indicator);
+                square.appendChild(button);
+                grid.appendChild(square);
+            }
+        }
+
+        function toggleSquare(index) {
+            if (bingoCard[index] === "FREE SPACE" || gameWon) return;
+            
+            selectedSquares[index] = !selectedSquares[index];
+            renderGrid();
+            checkForBingo();
+        }
+
+        function checkForBingo() {
+            const completedLines = [];
+            winningLines = [];
+
+            // Check rows
+            for (let i = 0; i < GRID_SIZE; i++) {
+                let rowComplete = true;
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    if (!selectedSquares[i * GRID_SIZE + j]) {
+                        rowComplete = false;
+                        break;
+                    }
+                }
+                if (rowComplete) {
+                    completedLines.push(`Row ${i + 1}`);
+                    for (let j = 0; j < GRID_SIZE; j++) {
+                        winningLines.push(i * GRID_SIZE + j);
+                    }
+                }
+            }
+
+            // Check columns
+            for (let j = 0; j < GRID_SIZE; j++) {
+                let colComplete = true;
+                for (let i = 0; i < GRID_SIZE; i++) {
+                    if (!selectedSquares[i * GRID_SIZE + j]) {
+                        colComplete = false;
+                        break;
+                    }
+                }
+                if (colComplete) {
+                    completedLines.push(`Col ${j + 1}`);
+                    for (let i = 0; i < GRID_SIZE; i++) {
+                        winningLines.push(i * GRID_SIZE + j);
+                    }
+                }
+            }
+
+            // Check diagonals
+            let mainDiagComplete = true;
+            let antiDiagComplete = true;
+            for (let i = 0; i < GRID_SIZE; i++) {
+                if (!selectedSquares[i * GRID_SIZE + i]) mainDiagComplete = false;
+                if (!selectedSquares[i * GRID_SIZE + (GRID_SIZE - 1 - i)]) antiDiagComplete = false;
+            }
+            if (mainDiagComplete) {
+                completedLines.push("Main Diagonal");
+                for (let i = 0; i < GRID_SIZE; i++) {
+                    winningLines.push(i * GRID_SIZE + i);
+                }
+            }
+            if (antiDiagComplete) {
+                completedLines.push("Anti Diagonal");
+                for (let i = 0; i < GRID_SIZE; i++) {
+                    winningLines.push(i * GRID_SIZE + (GRID_SIZE - 1 - i));
+                }
+            }
+
+            // Remove duplicates from winning lines
+            winningLines = [...new Set(winningLines)];
+
+            if (completedLines.length > 0 && !gameWon) {
+                gameWon = true;
+                stopTimer(); // Stop the round timer
+                showSuccessMessage(completedLines);
+                renderGrid(); // Re-render to disable buttons
+            }
+
+            return completedLines;
+        }
+
+        function showSuccessMessage(completedLines) {
+            const message = document.getElementById('success-message');
+            const linesText = document.getElementById('completed-lines');
+            const winnerRound = document.getElementById('winner-round');
+            
+            linesText.textContent = completedLines.join(", ");
+            if (winnerRound) {
+                winnerRound.textContent = currentRound;
+            }
+            message.style.display = 'block';
+        }
+
+        function hideSuccessMessage() {
+            document.getElementById('success-message').style.display = 'none';
+        }
+
+        function showVerification() {
+            const screen = document.getElementById('verification-screen');
+            const details = document.getElementById('verification-details');
+            const grid = document.getElementById('verification-grid');
+            
+            // Show verification details
+            const winTime = new Date();
+            const roundLength = Math.round((winTime - roundStartTime) / 1000 / 60); // minutes
+            const selectedCount = selectedSquares.filter(s => s).length;
+            
+            details.innerHTML = `
+                <strong>🏆 Round ${currentRound} Winner!</strong><br>
+                Win Time: ${winTime.toLocaleTimeString()}<br>
+                Round Length: ${roundLength} minutes<br>
+                Squares Marked: ${selectedCount}/25<br>
+                Winning Lines: ${checkForBingo().join(", ")}
+            `;
+            
+            // Show verification grid
+            grid.innerHTML = '';
+            for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+                const square = document.createElement('div');
+                square.className = 'verification-square';
+                
+                if (selectedSquares[i]) {
+                    square.classList.add('marked');
+                }
+                
+                if (winningLines.includes(i)) {
+                    square.classList.add('winning-line');
+                }
+                
+                const displayText = bingoCard[i] === "FREE SPACE" ? "FREE" : 
+                    (bingoCard[i].length > 8 ? bingoCard[i].substring(0, 6) + "..." : bingoCard[i]);
+                square.textContent = displayText;
+                square.title = bingoCard[i];
+                
+                grid.appendChild(square);
+            }
+            
+            screen.style.display = 'flex';
+        }
+
+        function hideVerification() {
+            document.getElementById('verification-screen').style.display = 'none';
+        }
+
+        function startNewRound() {
+            stopTimer();
+            currentRound++;
+            document.getElementById('new-round-number').textContent = currentRound;
+            document.getElementById('new-round-screen').style.display = 'flex';
+            hideSuccessMessage();
+            hideVerification();
+        }
+
+        function hideNewRoundScreen() {
+            document.getElementById('new-round-screen').style.display = 'none';
+            pausedElapsed = 0; // Reset for new round
+            initializeGame(); // This will start the new round with fresh cards
+        }
+
+        function newCard() {
+            hideVerification();
+            // Don't call hideNewRoundScreen() - that resets everything
+            
+            // Generate new random card but keep current round and timer
+            bingoCard = shuffleArray(EVENT_POOL).slice(0, GRID_SIZE * GRID_SIZE);
+            const centerIndex = Math.floor((GRID_SIZE * GRID_SIZE) / 2);
+            bingoCard[centerIndex] = "FREE SPACE";
+            
+            selectedSquares = new Array(GRID_SIZE * GRID_SIZE).fill(false);
+            selectedSquares[centerIndex] = true; // Free space is always selected
+            
+            gameWon = false;
+            winningLines = [];
+            renderGrid();
+            hideSuccessMessage();
+            
+            // Keep timer running if it was running, resume if it was stopped
+            if (!timerInterval) {
+                resumeTimer();
+            }
+        }
+
+        function clearSelections() {
+            selectedSquares.fill(false);
+            const centerIndex = Math.floor((GRID_SIZE * GRID_SIZE) / 2);
+            selectedSquares[centerIndex] = true; // Keep free space selected
+            gameWon = false;
+            winningLines = [];
+            renderGrid();
+            hideSuccessMessage();
+            hideVerification();
+            
+            // If timer was stopped due to BINGO, resume it (don't restart)
+            if (!timerInterval) {
+                resumeTimer();
+            }
+        }
+
+        function shuffleEvents() {
+            const centerIndex = Math.floor((GRID_SIZE * GRID_SIZE) / 2);
+            bingoCard = shuffleArray(EVENT_POOL).slice(0, GRID_SIZE * GRID_SIZE - 1);
+            bingoCard.splice(centerIndex, 0, "FREE SPACE");
+            renderGrid();
+        }
+
+        function quitGame() {
+            if (confirm("Are you sure you want to quit the game?")) {
+                stopTimer();
+                document.body.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; color: white;">
+                        <div>
+                            <h1>🍎⚾ Thanks for Playing!</h1>
+                            <p style="margin-top: 1rem; color: #ccc;">You can close this tab now.</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize the game when page loads
+        document.addEventListener('DOMContentLoaded', initializeGame);
+    </script>
+</body>
+</html>
